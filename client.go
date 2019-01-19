@@ -2,6 +2,7 @@ package ghost
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"path"
@@ -71,16 +72,18 @@ func (c *Client) Post(id string) (*Post, error) {
 	}
 	defer res.Body.Close()
 
+	if !validStatusCode(res.StatusCode) {
+		return nil, fmt.Errorf("invalid status code: %s", res.Status)
+	}
+
 	data := PostsResponse{}
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed decoding response")
 	}
 
-	// TODO: Handle status
-
 	if len(data.Errors) > 0 {
-		return nil, errors.New(data.Errors[0].Message)
+		return nil, fmt.Errorf("message: %s context: %s", data.Errors[0].Message, data.Errors[0].Context)
 	}
 
 	return &data.Posts[0], nil
@@ -112,7 +115,10 @@ func (c *Client) CreatePost(post *Post) (*Post, error) {
 		return nil, errors.Wrap(err, "failed making request ")
 	}
 	defer res.Body.Close()
-	c.log.Debugf("auth: got status code %d", res.StatusCode)
+
+	if !validStatusCode(res.StatusCode) {
+		return nil, fmt.Errorf("invalid status code: %s", res.Status)
+	}
 
 	data := PostsResponse{}
 	err = json.NewDecoder(res.Body).Decode(&data)
@@ -120,10 +126,8 @@ func (c *Client) CreatePost(post *Post) (*Post, error) {
 		return nil, errors.Wrap(err, "failed decoding response")
 	}
 
-	// TODO: Handle status
-
 	if len(data.Errors) > 0 {
-		return nil, errors.New(data.Errors[0].Message)
+		return nil, fmt.Errorf("message: %s context: %s", data.Errors[0].Message, data.Errors[0].Context)
 	}
 
 	return &data.Posts[0], nil
@@ -139,6 +143,7 @@ func (c *Client) auth() error {
 	v.Set("password", c.password)
 	v.Set("client_id", c.clientID)
 	v.Set("client_secret", c.clientSecret)
+	c.log.Debug("auth: credentials: ", v.Encode())
 	b := strings.NewReader(v.Encode())
 
 	req, err := http.NewRequest(http.MethodPost, u.String(), b)
@@ -151,10 +156,13 @@ func (c *Client) auth() error {
 	c.log.Debugf("auth: querying %s", u.String())
 	res, err := c.Client.Do(req)
 	if err != nil {
-		return errors.Wrap(err, "failed making request ")
+		return errors.Wrap(err, "failed making request")
 	}
 	defer res.Body.Close()
-	c.log.Debugf("auth: got status code %d", res.StatusCode)
+
+	if !validStatusCode(res.StatusCode) {
+		return fmt.Errorf("invalid status code: %s", res.Status)
+	}
 
 	data := authResponse{}
 	err = json.NewDecoder(res.Body).Decode(&data)
@@ -162,12 +170,16 @@ func (c *Client) auth() error {
 		return errors.Wrap(err, "failed decoding response")
 	}
 
+	if len(data.Errors) > 0 {
+		return fmt.Errorf("message: %s context: %s", data.Errors[0].Message, data.Errors[0].Context)
+	}
+
 	c.token = &token{
 		accessToken:  data.AccessToken,
 		refreshToken: data.RefreshToken,
 		expiration:   time.Now().Add(time.Duration(data.ExpiresIn) * time.Second),
 	}
-	c.Log.Debugf("auth: got token %#v", *c.token)
+	c.log.Debugf("auth: access token: %s refresh token: %s expiration: %s", c.token.accessToken, c.token.refreshToken, c.token.expiration.String())
 
 	return nil
 }
@@ -176,4 +188,14 @@ type token struct {
 	accessToken  string
 	refreshToken string
 	expiration   time.Time
+}
+
+func validStatusCode(statusCode int) bool {
+	if statusCode < http.StatusOK || statusCode >= http.StatusInternalServerError {
+		return false
+	}
+	if statusCode >= http.StatusMultipleChoices && statusCode <= http.StatusBadRequest {
+		return false
+	}
+	return true
 }
