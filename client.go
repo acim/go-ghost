@@ -2,7 +2,6 @@ package ghost
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"path"
@@ -64,15 +63,16 @@ func (c *Client) Post(id string) (*Post, error) {
 	data := PostsResponse{}
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
-		panic(err)
+		return nil, errors.Wrap(err, "failed decoding response")
 	}
 
-	for _, post := range data.Posts {
-		fmt.Printf("%#v\n", post)
+	// TODO: Handle status
+
+	if len(data.Errors) > 0 {
+		return nil, errors.New(data.Errors[0].Message)
 	}
-	for _, err := range data.Errors {
-		fmt.Printf("%#v\n", err)
-	}
+
+	return &data.Posts[0], nil
 }
 
 func (c *Client) auth() error {
@@ -104,6 +104,8 @@ func (c *Client) auth() error {
 	if err != nil {
 		return errors.Wrap(err, "failed decoding response")
 	}
+
+	// TODO: Handle errors
 
 	c.token = &token{
 		accessToken:  data.AccessToken,
