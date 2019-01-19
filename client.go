@@ -52,7 +52,48 @@ func (c *Client) Post(id string) (*Post, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed creating request")
 	}
-	req.Header.Add("Accept", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	res, err := c.Client.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed making request ")
+	}
+	defer res.Body.Close()
+
+	data := PostsResponse{}
+	err = json.NewDecoder(res.Body).Decode(&data)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed decoding response")
+	}
+
+	// TODO: Handle status
+
+	if len(data.Errors) > 0 {
+		return nil, errors.New(data.Errors[0].Message)
+	}
+
+	return &data.Posts[0], nil
+}
+
+// CreatePost creates new post.
+func (c *Client) CreatePost(post *Post) (*Post, error) {
+	if c.token == nil {
+		err := c.auth()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed authentication")
+		}
+	}
+
+	u := *c.baseURL
+	u.Path = path.Join(u.Path, "ghost", "api", "v0.1", "authentication", "token")
+
+	req, err := http.NewRequest(http.MethodPost, u.String(), nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed creating request")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", "Bearer "+c.token.accessToken)
 
 	res, err := c.Client.Do(req)
 	if err != nil {
@@ -78,6 +119,7 @@ func (c *Client) Post(id string) (*Post, error) {
 func (c *Client) auth() error {
 	u := *c.baseURL
 	u.Path = path.Join(u.Path, "ghost", "api", "v0.1", "authentication", "token")
+
 	v := url.Values{}
 	v.Set("grant_type", "password")
 	v.Set("username", c.username)
@@ -90,8 +132,8 @@ func (c *Client) auth() error {
 	if err != nil {
 		return errors.Wrap(err, "failed creating request")
 	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
 
 	res, err := c.Client.Do(req)
 	if err != nil {
