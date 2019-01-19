@@ -1,6 +1,7 @@
 package ghost
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -76,7 +77,7 @@ func (c *Client) Post(id string) (*Post, error) {
 		return nil, fmt.Errorf("invalid status code: %s", res.Status)
 	}
 
-	data := PostsResponse{}
+	data := PostsReqRes{}
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed decoding response")
@@ -99,9 +100,15 @@ func (c *Client) CreatePost(post *Post) (*Post, error) {
 	}
 
 	u := *c.baseURL
-	u.Path = path.Join(u.Path, "ghost", "api", "v0.1", "authentication", "token")
+	u.Path = path.Join(u.Path, "ghost", "api", "v0.1", "posts")
 
-	req, err := http.NewRequest(http.MethodPost, u.String(), nil)
+	b := &bytes.Buffer{}
+	br := PostsReqRes{
+		Posts: []Post{*post},
+	}
+	err := json.NewEncoder(b).Encode(br)
+
+	req, err := http.NewRequest(http.MethodPost, u.String(), b)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed creating request")
 	}
@@ -120,7 +127,7 @@ func (c *Client) CreatePost(post *Post) (*Post, error) {
 		return nil, fmt.Errorf("invalid status code: %s", res.Status)
 	}
 
-	data := PostsResponse{}
+	data := PostsReqRes{}
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed decoding response")
@@ -150,8 +157,8 @@ func (c *Client) auth() error {
 	if err != nil {
 		return errors.Wrap(err, "failed creating request")
 	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
 
 	c.log.Debugf("auth: querying %s", u.String())
 	res, err := c.Client.Do(req)
@@ -164,7 +171,7 @@ func (c *Client) auth() error {
 		return fmt.Errorf("invalid status code: %s", res.Status)
 	}
 
-	data := authResponse{}
+	data := authRes{}
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
 		return errors.Wrap(err, "failed decoding response")

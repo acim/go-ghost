@@ -1,10 +1,10 @@
 package ghost
 
-// PostsResponse ...
-type PostsResponse struct {
-	Posts  []Post  `json:"posts"`
-	Meta   Meta    `json:"meta"`
-	Errors []Error `json:"errors"`
+// PostsReqRes ...
+type PostsReqRes struct {
+	Posts  []Post  `json:"posts,omitempty"`
+	Meta   Meta    `json:"meta,omitempty"`
+	Errors []Error `json:"errors,omitempty"`
 }
 
 // Meta ...
@@ -67,7 +67,7 @@ type Error struct {
 	ErrorType string `json:"errorType"`
 }
 
-type authResponse struct {
+type authRes struct {
 	AccessToken  string  `json:"access_token"`
 	RefreshToken string  `json:"refresh_token"`
 	ExpiresIn    int64   `json:"expires_in"`
