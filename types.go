@@ -29,6 +29,7 @@ type Post struct {
 	Title              string `json:"title,omitempty"`
 	Slug               string `json:"slug,omitempty"`
 	HTML               string `json:"html,omitempty"`
+	Markdown           string `json:"markdown,omitempty"`
 	CommentID          string `json:"comment_id,omitempty"`
 	FeatureImage       string `json:"feature_image,omitempty"`
 	Featured           bool   `json:"featured,omitempty"`
