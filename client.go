@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	ghost "github.com/acim/go-ghost"
 	"github.com/pkg/errors"
 )
 
@@ -17,6 +16,7 @@ import (
 type Client struct {
 	Client       *http.Client
 	baseURL      *url.URL
+	apiKey       string
 	username     string
 	password     string
 	clientID     string
@@ -61,7 +61,7 @@ func (c *Client) Post(id string) (*Post, error) {
 	}
 	defer res.Body.Close()
 
-	data := ghost.PostsResponse{}
+	data := PostsResponse{}
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
 		panic(err)
