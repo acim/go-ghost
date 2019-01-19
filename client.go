@@ -150,8 +150,8 @@ func (c *Client) auth() error {
 	if err != nil {
 		return errors.Wrap(err, "failed creating request")
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Accept", "application/json")
 
 	c.log.Debugf("auth: querying %s", u.String())
 	res, err := c.Client.Do(req)
