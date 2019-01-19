@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 // Client ...
@@ -21,6 +22,7 @@ type Client struct {
 	clientID     string
 	clientSecret string
 	token        *token
+	Log          *zap.SugaredLogger
 }
 
 // NewClient create new Ghost client.
@@ -95,11 +97,13 @@ func (c *Client) CreatePost(post *Post) (*Post, error) {
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.token.accessToken)
 
+	c.Log.Debugf("auth: querying %s", u.String())
 	res, err := c.Client.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed making request ")
 	}
 	defer res.Body.Close()
+	c.Log.Debugf("auth: got status code %d", res.StatusCode)
 
 	data := PostsResponse{}
 	err = json.NewDecoder(res.Body).Decode(&data)
@@ -135,11 +139,13 @@ func (c *Client) auth() error {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
 
+	c.Log.Debugf("auth: querying %s", u.String())
 	res, err := c.Client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "failed making request ")
 	}
 	defer res.Body.Close()
+	c.Log.Debugf("auth: got status code %d", res.StatusCode)
 
 	data := authResponse{}
 	err = json.NewDecoder(res.Body).Decode(&data)
@@ -147,13 +153,12 @@ func (c *Client) auth() error {
 		return errors.Wrap(err, "failed decoding response")
 	}
 
-	// TODO: Handle errors
-
 	c.token = &token{
 		accessToken:  data.AccessToken,
 		refreshToken: data.RefreshToken,
 		expiration:   time.Now().Add(time.Duration(data.ExpiresIn) * time.Second),
 	}
+	c.Log.Debugf("auth: got token %#v", *c.token)
 
 	return nil
 }
