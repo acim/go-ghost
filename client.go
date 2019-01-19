@@ -22,7 +22,7 @@ type Client struct {
 	clientID     string
 	clientSecret string
 	token        *token
-	Log          *zap.SugaredLogger
+	log          *zap.SugaredLogger
 }
 
 // NewClient create new Ghost client.
@@ -31,6 +31,14 @@ func NewClient(baseURL, apiKey, username, password, clientID, clientSecret strin
 	if err != nil {
 		return nil, errors.Wrap(err, "failed parsing base url")
 	}
+
+	logger, err := zap.NewDevelopment() // TODO: Provide possibility to create production logger
+	if err != nil {
+		return nil, errors.Wrap(err, "failed creating logger")
+	}
+	defer logger.Sync()
+	sugar := logger.Sugar()
+
 	return &Client{
 		Client:       http.DefaultClient,
 		baseURL:      u,
@@ -39,6 +47,7 @@ func NewClient(baseURL, apiKey, username, password, clientID, clientSecret strin
 		password:     password,
 		clientID:     clientID,
 		clientSecret: clientSecret,
+		log:          sugar.Named("go-ghost"),
 	}, nil
 }
 
@@ -97,13 +106,13 @@ func (c *Client) CreatePost(post *Post) (*Post, error) {
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.token.accessToken)
 
-	c.Log.Debugf("auth: querying %s", u.String())
+	c.log.Debugf("auth: querying %s", u.String())
 	res, err := c.Client.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed making request ")
 	}
 	defer res.Body.Close()
-	c.Log.Debugf("auth: got status code %d", res.StatusCode)
+	c.log.Debugf("auth: got status code %d", res.StatusCode)
 
 	data := PostsResponse{}
 	err = json.NewDecoder(res.Body).Decode(&data)
@@ -139,13 +148,13 @@ func (c *Client) auth() error {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
 
-	c.Log.Debugf("auth: querying %s", u.String())
+	c.log.Debugf("auth: querying %s", u.String())
 	res, err := c.Client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "failed making request ")
 	}
 	defer res.Body.Close()
-	c.Log.Debugf("auth: got status code %d", res.StatusCode)
+	c.log.Debugf("auth: got status code %d", res.StatusCode)
 
 	data := authResponse{}
 	err = json.NewDecoder(res.Body).Decode(&data)
