@@ -21,5 +21,5 @@ This package uses both v0.1 and v2 of Ghost API because v2 doesn't support resou
 
 ## Obtaining client ID and client secret
 
-- you can find this inside table users of your Ghost database
+- you can find this inside table clients of your Ghost database
 - try with client ID ghost-frontend or ghost-admin and correlated client secret
