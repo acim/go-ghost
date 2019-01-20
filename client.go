@@ -34,7 +34,7 @@ func NewClient(baseURL, apiKey, username, password, clientID, clientSecret strin
 		return nil, errors.Wrap(err, "failed parsing base url")
 	}
 
-	logger, err := zap.NewDevelopment() // TODO: Provide possibility to create production logger
+	logger, err := zap.NewProduction()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed creating logger")
 	}
@@ -77,7 +77,7 @@ func (c *Client) Post(id string) (*Post, error) {
 		return nil, fmt.Errorf("invalid status code: %s", res.Status)
 	}
 
-	data := PostsReqRes{}
+	data := Payload{}
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed decoding response")
@@ -103,7 +103,7 @@ func (c *Client) CreatePost(post *Post) (*Post, error) {
 	u.Path = path.Join(u.Path, "ghost", "api", "v0.1", "posts")
 
 	b := &bytes.Buffer{}
-	br := PostsReqRes{
+	br := Payload{
 		Posts: []Post{*post},
 	}
 	err := json.NewEncoder(b).Encode(br)
@@ -127,7 +127,7 @@ func (c *Client) CreatePost(post *Post) (*Post, error) {
 		return nil, fmt.Errorf("invalid status code: %s", res.Status)
 	}
 
-	data := PostsReqRes{}
+	data := Payload{}
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed decoding response")
@@ -171,7 +171,7 @@ func (c *Client) auth() error {
 		return fmt.Errorf("invalid status code: %s", res.Status)
 	}
 
-	data := authRes{}
+	data := Payload{}
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
 		return errors.Wrap(err, "failed decoding response")
