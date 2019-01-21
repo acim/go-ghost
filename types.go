@@ -1,8 +1,8 @@
 package ghost
 
-import "time"
-
-//
+import (
+	"time"
+)
 
 // Payload ...
 type Payload struct {
@@ -121,4 +121,19 @@ type Error struct {
 	Message   string `json:"message,omitempty"`
 	Context   string `json:"context,omitempty"`
 	ErrorType string `json:"errorType,omitempty"`
+}
+
+// Mobiledoc ...
+type Mobiledoc struct {
+	Version  string          `json:"version"`
+	Atoms    []interface{}   `json:"atoms"`
+	Cards    [][]interface{} `json:"cards"`
+	Markups  []interface{}   `json:"markups"`
+	Sections [][]interface{} `json:"sections"`
+}
+
+// Card ...
+type Card struct {
+	HTML     *string `json:"html,omitempty"`
+	Markdown *string `json:"markdown,omitempty"`
 }
