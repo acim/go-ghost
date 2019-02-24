@@ -1,0 +1,61 @@
+GET http://localhost:3000/ghost/api/v2/content/posts/?key=xxx HTTP/1.1
+Accept: application/json
+
+
+
+GET http://localhost:3000/ghost/api/v2/content/posts/5c428c86409b0a0001d99d6c?key=xxx HTTP/1.1
+Accept: application/json
+
+
+
+POST http://localhost:3000/ghost/api/v0.1/authentication/token HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+client_id=ghost-admin&client_secret=yyy&grant_type=password&password=zzz&username=boban.acimovic%40gmail.com
+
+
+
+POST http://localhost:3000/ghost/api/v0.1/posts HTTP/1.1
+Authorization: Bearer xxx
+Content-Type: application/json
+
+{
+    "posts":
+    [
+        {
+            "title": "DDDDDD",
+            "mobiledoc": "{\"version\":\"0.3.1\",\"atoms\":[],\"cards\":[[\"html\",{\"html\":\"<iframe type=text/html width=640 height=390 src=http://www.youtube.com/embed/Mq99gFKztaI frameborder=0></iframe>\"}]],\"markups\":[],\"sections\":[[10,0],[1,\"p\",[]]]}"
+        }
+    ]
+}
+
+
+
+
+
+POST http://localhost:3000/ghost/api/v0.1/posts HTTP/1.1
+Authorization: Bearer xxx
+Content-Type: application/json
+
+{
+    "posts":
+    [
+        {
+            "title": "Test",
+            "mobiledoc": "{\"version\":\"0.3.1\",\"atoms\":null,\"cards\":[[\"html\",{\"html\":\"\\u003ciframe type=text/html width=640 height=390 src=http://www.youtube.com/embed/Mq99gFKztaI frameborder=0\\u003e\\u003c/iframe\\u003e\"}]],\"markups\":null,\"sections\":[[10,0],[1,\"p\",[]]]}"
+        }
+    ]
+}
+
+
+{"version":"0.3.1","atoms":[],"cards":[["markdown",{"markdown":"YOUR_MARKDOWN"}]],"markups":[],"sections":[[10,0],[1,"p",[]]]}
+
+Post{
+			Title: "Test " + id,
+			//HTML:   fmt.Sprintf("<iframe type=\"text/html\" width=\"640\" height=\"390\" src=\"http://www.youtube.com/embed/%s\" frameborder=\"0\"></iframe>", id),
+			//Markdown: fmt.Sprintf("[![Everything Is AWESOME](https://img.youtube.com/vi/%s.jpg)](https://www.youtube.com/watch?v=%s \"Everything Is AWESOME\")", id, id),
+			//Mobiledoc: "{\"version\":\"0.3.1\",\"atoms\":[],\"cards\":[[\"html\",{\"html\":\"<iframe type=text/html width=640 height=390 src=http://www.youtube.com/embed/Mq99gFKztaI frameborder=0></iframe>\"}]],\"markups\":[],\"sections\":[[10,0],[1,\"p\",[]]]}"
+			Mobiledoc: "{\"version\":\"0.3.1\",\"atoms\":null,\"cards\":[[\"html\",{\"html\":\"\\u003ciframe type=text/html width=640 height=390 src=http://www.youtube.com/embed/Mq99gFKztaI frameborder=0\\u003e\\u003c/iframe\\u003e\"}]],\"markups\":null,\"sections\":[[10,0],[1,\"p\",[]]]}",
+			Status:    "published",
+		}
